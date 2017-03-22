@@ -72,6 +72,25 @@ def greedy_cow_transport(cows,limit=10):
         loads.append(cur_load)
     return loads
 
+def weight_of_load(cows, load):
+    """
+    Counts the total weight of a load.
+    """
+    weight = 0
+    for cow in load:
+        weight += cows[cow]
+    return weight
+
+def weight_is_valid(cows, loads, limit):
+    """
+    Checks that weight of each load in loads are whithin the limit.
+    """
+    for load in loads:
+        if weight_of_load(cows, load) > limit:
+            break
+    else:
+        return True
+    return False
 
 
 # Problem 2
@@ -96,7 +115,14 @@ def brute_force_cow_transport(cows,limit=10):
     trips
     """
     # TODO: Your code here
-    pass
+    best_loads = []
+    length_of_best_loads = len(list(cows))
+    for loads in get_partitions(cows):
+        if weight_is_valid(cows, loads, limit) and\
+           len(loads) <= length_of_best_loads:
+            best_loads = loads
+            length_of_best_loads = len(loads)
+    return best_loads
 
         
 # Problem 3
