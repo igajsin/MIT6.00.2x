@@ -54,8 +54,24 @@ def greedy_cow_transport(cows,limit=10):
     transported on a particular trip and the overall list containing all the
     trips
     """
-    # TODO: Your code here
-    pass
+    def load(herd, acc, rest_limit):
+        rest_herd = herd[:]
+        for (name, weight) in herd:
+            if weight <= rest_limit:
+                acc.append(name)
+                rest_limit -= weight
+                rest_herd.remove((name, weight))
+                if rest_limit == 0:
+                    break
+        return (rest_herd, acc)
+
+    loads = []
+    herd = sorted(cows.items(), key = lambda x: x[1], reverse = True)
+    while herd:
+        (herd, cur_load) = load(herd, [], limit)
+        loads.append(cur_load)
+    return loads
+
 
 
 # Problem 2
