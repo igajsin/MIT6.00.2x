@@ -63,6 +63,9 @@ class Position(object):
     def __str__(self):
         return "(%0.2f, %0.2f)" % (self.x, self.y)
 
+    def __repr__(self):
+        self.__str__
+
 
 # === Problem 1
 class RectangularRoom(object):
@@ -255,10 +258,12 @@ class StandardRobot(Robot):
         Move the robot to a new position and mark the tile it is on as having
         been cleaned.
         """
-        self.setRobotPosition(self.oneStep())
-        self.room.cleanTileAtPosition(self.position)
-        if not self.room.isPositionInRoom(self.oneStep()):
+        new_pos =  self.oneStep()
+        while not self.room.isPositionInRoom(new_pos):
             self.setRobotDirection(random.randint(0, 360))
+            new_pos = self.oneStep()
+        self.setRobotPosition(new_pos)
+        self.room.cleanTileAtPosition(self.getRobotPosition())
 
 
 # Uncomment this line to see your implementation of StandardRobot in action!
@@ -266,6 +271,37 @@ class StandardRobot(Robot):
 
 
 # === Problem 4
+def makeRobots(robot_type, room, speed, num_robots):
+    """
+    Return list of robots with given parameters.
+    """
+    robots = []
+    for i in range(num_robots):
+        robot = robot_type(room, speed)
+        robot.setRobotPosition(room.getRandomPosition())
+        robot.setRobotDirection(random.randint(0, 360))
+        robots.append(robot)
+    return robots
+
+
+def getCoverage(room):
+    return room.getNumCleanedTiles() / room.getNumTiles()
+
+
+def cleanTheRoom(room, robots, min_coverage): #, anim):
+    """
+    Check amount of iteration to clean a given room.
+    """
+    count = 0
+    while getCoverage(room) < min_coverage:
+        for robot in robots:
+            robot.updatePositionAndClean()
+            room.cleanTileAtPosition(robot.getRobotPosition())
+#            anim.update(room, robots)
+        count += 1
+    return count
+
+
 def runSimulation(num_robots, speed, width, height, min_coverage, num_trials,
                   robot_type):
     """
@@ -284,10 +320,18 @@ def runSimulation(num_robots, speed, width, height, min_coverage, num_trials,
     robot_type: class of robot to be instantiated (e.g. StandardRobot or
                 RandomWalkRobot)
     """
-    raise NotImplementedError
+    results = []
+#    anim = ps2_visualize.RobotVisualization(num_robots, width, height)
+    for i in range(num_trials):
+        room = RectangularRoom(width, height)
+        robots = makeRobots(robot_type, room, speed, num_robots)
+        results.append(cleanTheRoom(room, robots, min_coverage))#, anim))
+#    anim.done()
+    return sum(results)/len(results)
+    
 
 # Uncomment this line to see how much your simulation takes on average
-##print(runSimulation(1, 1.0, 10, 10, 0.75, 30, StandardRobot))
+#print(runSimulation(1, 1.0, 10, 10, 0.75, 30, StandardRobot))
 
 
 # === Problem 5
@@ -296,6 +340,13 @@ class RandomWalkRobot(Robot):
     A RandomWalkRobot is a robot with the "random walk" movement strategy: it
     chooses a new direction at random at the end of each time-step.
     """
+    def oneStep(self):
+        """
+        return the position after one step. Change nothing
+        """
+        self.setRobotDirection(random.randint(0, 360))
+        return self.position.getNewPosition(self.direction, self.speed)
+
     def updatePositionAndClean(self):
         """
         Simulate the passage of a single time-step.
@@ -303,7 +354,12 @@ class RandomWalkRobot(Robot):
         Move the robot to a new position and mark the tile it is on as having
         been cleaned.
         """
-        raise NotImplementedError
+        new_pos = self.oneStep()
+        while not self.room.isPositionInRoom(new_pos):
+            new_pos = self.oneStep()
+        self.setRobotPosition(new_pos)
+        self.room.cleanTileAtPosition(self.getRobotPosition())
+
 
 
 def showPlot1(title, x_label, y_label):
@@ -365,3 +421,11 @@ def showPlot2(title, x_label, y_label):
 #
 #       (... your call here ...)
 #
+
+def test_movement(robot, position, direction):
+    robot.setRobotPosition(position)
+    robot.setRobotDirection(direction)
+    for i in range(20):
+        print("{}: {} {}".format(i, robot.getRobotPosition(), robot.getRobotDirection()))
+        robot.updatePositionAndClean()
+    
