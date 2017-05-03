@@ -66,7 +66,7 @@ class Climate(object):
             if month not in self.rawdata[city][year]:
                 self.rawdata[city][year][month] = {}
             self.rawdata[city][year][month][day] = temperature
-            
+
         f.close()
 
     def get_yearly_temp(self, city, year):
@@ -130,8 +130,10 @@ def generate_models(x, y, degs):
         a list of numpy arrays, where each array is a 1-d array of coefficients
         that minimizes the squared error of the fitting polynomial
     """
-    # TODO
-    pass
+    models = []
+    for deg in degs:
+        models.append(np.polyfit(x, y, deg))
+    return models
 
 # Problem 2
 def r_squared(y, estimated):
@@ -143,10 +145,30 @@ def r_squared(y, estimated):
     Returns:
         a float for the R-squared error term
     """
-    # TODO
-    pass
+    mean  = float(sum(y)) / len(y)
+    numerator = 0
+    denomenator = 0
+    for i in range(len(y)):
+        numerator += (y[i] - estimated[i]) ** 2
+        denomenator += (y[i] - mean) ** 2
+    return 1 - numerator / denomenator
+
 
 # Problem 3
+def get_point(x, model):
+    p = len(model) - 1
+    y = 0
+    for c in model:
+        y += c * x**p
+        p -= 1
+    return y
+
+def check_model(x, y, model):
+    estimated = []
+    for x_i in x:
+        estimated.append(get_point(x_i, model))
+    return r_squared(y, estimated)
+
 def evaluate_models_on_training(x, y, models):
     """
     For each regression model, compute the R-square for this model with the
@@ -169,7 +191,12 @@ def evaluate_models_on_training(x, y, models):
         None
     """
     # TODO
-    pass
+    best_r_sq = 0
+    for model in models:
+        r_sq = check_model(x, y, model)
+        if r_sq > best_r_sq:
+            best_r_sq = r_sq
+    return best_r_sq
 
 
 ### Begining of program
@@ -188,6 +215,7 @@ evaluate_models_on_training(x, y, models)
 x1 = INTERVAL_1
 x2 = INTERVAL_2
 y = []
-# MISSING LINES
-models = generate_models(x, y, [1])    
+for year in INTERVAL_1:
+    y.append(numpy.mean(raw_data.get_yearly_temp('BOSTON', year)))
+models = generate_models(x, y, [1])
 evaluate_models_on_training(x, y, models)
